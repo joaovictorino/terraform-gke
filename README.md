@@ -26,5 +26,6 @@ terraform apply -auto-approve
 Adicionar credenciais do GKE no kubectl local
 
 ```sh
+sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
 gcloud container clusters get-credentials  gke-aula-infra --region us-central1
 ```

@@ -27,49 +27,42 @@ resource "google_compute_subnetwork" "subnet" {
   ip_cidr_range = "10.10.0.0/24"
 }
 
+resource "google_project_service" "container" {
+  service            = "container.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_container_cluster" "primary" {
   name     = "gke-aula-infra"
   location = "us-central1"
 
   remove_default_node_pool = true
   initial_node_count       = 1
-  deletion_protection = false
-  network    = google_compute_network.vpc.name
-  subnetwork = google_compute_subnetwork.subnet.name
+  deletion_protection      = false
+  network                  = google_compute_network.vpc.name
+  subnetwork               = google_compute_subnetwork.subnet.name
 }
 
-data "google_container_engine_versions" "gke_version" {
-  location = "us-central1"
-  version_prefix = "1.27."
-}
-
-resource "google_project_service" "container" {
-  service            = "container.googleapis.com"
-  disable_on_destroy = false
+resource "google_service_account" "default" {
+  account_id   = "service-account-id"
+  display_name = "Service Account"
 }
 
 resource "google_container_node_pool" "primary_nodes" {
   name       = google_container_cluster.primary.name
   location   = "us-central1"
   cluster    = google_container_cluster.primary.name
-
-  version = data.google_container_engine_versions.gke_version.release_channel_latest_version["STABLE"]
-  node_count = 2
+  node_count = 1
 
   node_config {
     oauth_scopes = [
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/cloud-platform"
     ]
 
-    labels = {
-      env = "aula"
-    }
-
-    machine_type = "n1-standard-1"
-    tags         = ["gke-node", "gke-aula-infra"]
-    metadata = {
-      disable-legacy-endpoints = "true"
-    }
+    service_account = google_service_account.default.email
+    preemptible     = true
+    machine_type    = "e2-medium"
   }
 }
