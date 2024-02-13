@@ -9,10 +9,13 @@ terraform {
   required_version = ">= 0.14"
 }
 
+variable "region" {
+  default = "us-east1"
+}
+
 provider "google" {
   project = "teste-sample-388301"
-  region  = "us-central1"
-  zone    = "us-central1-a"
+  region  = var.region
 }
 
 resource "google_compute_network" "vpc" {
@@ -22,7 +25,7 @@ resource "google_compute_network" "vpc" {
 
 resource "google_compute_subnetwork" "subnet" {
   name          = "subnet-gke"
-  region        = "us-central1"
+  region        = var.region
   network       = google_compute_network.vpc.name
   ip_cidr_range = "10.10.0.0/24"
 }
@@ -34,7 +37,7 @@ resource "google_project_service" "container" {
 
 resource "google_container_cluster" "primary" {
   name     = "gke-aula-infra"
-  location = "us-central1"
+  location = var.region
 
   remove_default_node_pool = true
   initial_node_count       = 1
@@ -50,7 +53,7 @@ resource "google_service_account" "default" {
 
 resource "google_container_node_pool" "primary_nodes" {
   name       = google_container_cluster.primary.name
-  location   = "us-central1"
+  location   = var.region
   cluster    = google_container_cluster.primary.name
   node_count = 1
 
