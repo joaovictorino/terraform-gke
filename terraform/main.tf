@@ -11,6 +11,7 @@ terraform {
 
 variable "region" {
   default = "us-east1"
+  type    = string
 }
 
 provider "google" {
@@ -66,6 +67,6 @@ resource "google_container_node_pool" "primary_nodes" {
 
     service_account = google_service_account.default.email
     preemptible     = true
-    machine_type    = "e2-medium"
+    machine_type    = "n4-standard-2"
   }
 }
